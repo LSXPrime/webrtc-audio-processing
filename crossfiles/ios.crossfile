@@ -1,0 +1,37 @@
+[host_machine]
+system = 'darwin'
+cpu_family = 'aarch64'
+cpu = 'arm64'
+endian = 'little'
+
+[binaries]
+ar = '/opt/homebrew/opt/llvm/bin/llvm-ar'
+as = '/opt/homebrew/opt/llvm/bin/llvm-as'
+c = '/opt/homebrew/opt/llvm/bin/clang'
+cc = '/opt/homebrew/opt/llvm/bin/clang'
+cpp = '/opt/homebrew/opt/llvm/bin/clang++'
+cxx = '/opt/homebrew/opt/llvm/bin/clang++'
+ld = '/opt/homebrew/opt/llvm/bin/ld.lld'
+objc = '/opt/homebrew/opt/llvm/bin/clang'
+objcpp = '/opt/homebrew/opt/llvm/bin/clang++'
+ranlib = '/opt/homebrew/opt/llvm/bin/llvm-ranlib'
+strip = '/opt/homebrew/opt/llvm/bin/llvm-strip'
+
+[properties]
+skip_sanity_check = true
+ios_deployment_target = '13.0'
+vendor = 'apple'
+ld = '/opt/homebrew/opt/llvm/bin/ld.lld'
+ld_args = ['-v']
+needs_exe_wrapper = true
+sys_root = '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk'
+
+[built-in options]
+c_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk', '-miphoneos-version-min=13.0']
+cpp_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk', '-miphoneos-version-min=13.0']
+objc_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk', '-miphoneos-version-min=13.0']
+objcpp_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk', '-miphoneos-version-min=13.0']
+c_link_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk', '-miphoneos-version-min=13.0']
+cpp_link_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk', '-miphoneos-version-min=13.0']
+objc_link_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk', '-miphoneos-version-min=13.0']
+objcpp_link_args = ['-arch', 'arm64', '-isysroot', '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk', '-miphoneos-version-min=13.0']

@@ -1,0 +1,16 @@
+[constants]
+ndk_root = '/opt/hostedtoolcache/ndk/r26d/x64'
+api_level = '21'
+toolchain_prefix = ndk_root + '/toolchains/llvm/prebuilt/linux-x86_64/bin/'
+
+[host_machine]
+system = 'android'
+cpu_family = 'x86_64'
+cpu = 'x86_64'
+endian = 'little'
+
+[binaries]
+c = toolchain_prefix + 'x86_64-linux-android' + api_level + '-clang'
+cpp = toolchain_prefix + 'x86_64-linux-android' + api_level + '-clang++'
+ar = toolchain_prefix + 'llvm-ar'
+strip = toolchain_prefix + 'llvm-strip'

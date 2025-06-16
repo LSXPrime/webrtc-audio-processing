@@ -209,3 +209,323 @@ std::string AudioProcessing::Config::ToString() const {
 }
 
 }  // namespace webrtc
+
+// ========================================================================= //
+//                      C-API IMPLEMENTATION                                 //
+// ========================================================================= //
+
+// Creation and destruction
+webrtc_apm* webrtc_apm_create() {
+    const auto apm = new webrtc_apm();
+    apm->apm = webrtc::AudioProcessingBuilder().Create();
+    return apm;
+}
+
+void webrtc_apm_destroy(const webrtc_apm* apm) {
+    delete apm;
+}
+
+// Configuration management
+webrtc_apm_config* webrtc_apm_config_create() {
+    return new webrtc_apm_config();
+}
+
+void webrtc_apm_config_destroy(const webrtc_apm_config* config) {
+        delete config;
+}
+
+// Config setters
+void webrtc_apm_config_set_echo_canceller(webrtc_apm_config* config, int enabled, int mobile_mode) {
+    if (config) {
+        config->config.echo_canceller.enabled = enabled != 0;
+        config->config.echo_canceller.mobile_mode = mobile_mode != 0;
+    }
+}
+
+void webrtc_apm_config_set_noise_suppression(webrtc_apm_config* config, int enabled, webrtc_apm_ns_level level) {
+    if (config) {
+        config->config.noise_suppression.enabled = enabled != 0;
+        switch (level) {
+            case WEBRTC_APM_NS_LOW: config->config.noise_suppression.level = webrtc::AudioProcessing::Config::NoiseSuppression::kLow; break;
+            case WEBRTC_APM_NS_MODERATE: config->config.noise_suppression.level = webrtc::AudioProcessing::Config::NoiseSuppression::kModerate; break;
+            case WEBRTC_APM_NS_HIGH: config->config.noise_suppression.level = webrtc::AudioProcessing::Config::NoiseSuppression::kHigh; break;
+            case WEBRTC_APM_NS_VERY_HIGH: config->config.noise_suppression.level = webrtc::AudioProcessing::Config::NoiseSuppression::kVeryHigh; break;
+        }
+    }
+}
+
+void webrtc_apm_config_set_gain_controller1(webrtc_apm_config* config, int enabled, webrtc_apm_gc_mode mode,
+                                                   int target_level_dbfs, int compression_gain_db, int enable_limiter) {
+    if (config) {
+        config->config.gain_controller1.enabled = enabled != 0;
+        switch (mode) {
+            case WEBRTC_APM_GC_ADAPTIVE_ANALOG: config->config.gain_controller1.mode = webrtc::AudioProcessing::Config::GainController1::kAdaptiveAnalog; break;
+            case WEBRTC_APM_GC_ADAPTIVE_DIGITAL: config->config.gain_controller1.mode = webrtc::AudioProcessing::Config::GainController1::kAdaptiveDigital; break;
+            case WEBRTC_APM_GC_FIXED_DIGITAL: config->config.gain_controller1.mode = webrtc::AudioProcessing::Config::GainController1::kFixedDigital; break;
+        }
+        config->config.gain_controller1.target_level_dbfs = target_level_dbfs;
+        config->config.gain_controller1.compression_gain_db = compression_gain_db;
+        config->config.gain_controller1.enable_limiter = enable_limiter != 0;
+    }
+}
+
+void webrtc_apm_config_set_gain_controller2(webrtc_apm_config* config, int enabled) {
+    if (config) {
+        config->config.gain_controller2.enabled = enabled != 0;
+    }
+}
+
+void webrtc_apm_config_set_high_pass_filter(webrtc_apm_config* config, int enabled) {
+    if (config) {
+        config->config.high_pass_filter.enabled = enabled != 0;
+    }
+}
+
+void webrtc_apm_config_set_pre_amplifier(webrtc_apm_config* config, int enabled, float fixed_gain_factor) {
+    if (config) {
+        config->config.pre_amplifier.enabled = enabled != 0;
+        config->config.pre_amplifier.fixed_gain_factor = fixed_gain_factor;
+    }
+}
+
+void webrtc_apm_config_set_pipeline(webrtc_apm_config* config, int max_internal_rate,
+                                           int multi_channel_render, int multi_channel_capture,
+                                           webrtc_apm_downmix_method downmix_method) {
+    if (config) {
+        config->config.pipeline.maximum_internal_processing_rate = max_internal_rate;
+        config->config.pipeline.multi_channel_render = multi_channel_render != 0;
+        config->config.pipeline.multi_channel_capture = multi_channel_capture != 0;
+        switch (downmix_method) {
+            case WEBRTC_APM_DOWNMIX_AVERAGE_CHANNELS: config->config.pipeline.capture_downmix_method = webrtc::AudioProcessing::Config::Pipeline::DownmixMethod::kAverageChannels; break;
+            case WEBRTC_APM_DOWNMIX_USE_FIRST_CHANNEL: config->config.pipeline.capture_downmix_method = webrtc::AudioProcessing::Config::Pipeline::DownmixMethod::kUseFirstChannel; break;
+        }
+    }
+}
+
+// Apply configuration to APM
+webrtc_apm_error webrtc_apm_apply_config(const webrtc_apm* apm, const webrtc_apm_config* config) {
+    if (!apm || !config) {
+        return WEBRTC_APM_BAD_PARAMETER;
+    }
+    apm->apm->ApplyConfig(config->config);
+    return WEBRTC_APM_NO_ERROR;
+}
+
+// Stream configuration
+webrtc_stream_config* webrtc_apm_stream_config_create(int sample_rate_hz, size_t num_channels) {
+    auto* config = new webrtc_stream_config();
+    config->config = webrtc::StreamConfig(sample_rate_hz, num_channels);
+    return config;
+}
+
+void webrtc_apm_stream_config_destroy(const webrtc_stream_config* config) {
+    delete config;
+}
+
+int webrtc_apm_stream_config_sample_rate_hz(const webrtc_stream_config* config) {
+    return config ? config->config.sample_rate_hz() : 0;
+}
+
+size_t webrtc_apm_stream_config_num_channels(const webrtc_stream_config* config) {
+    return config ? config->config.num_channels() : 0;
+}
+
+// Processing configuration
+webrtc_processing_config* webrtc_apm_processing_config_create() {
+    return new webrtc_processing_config();
+}
+
+void webrtc_apm_processing_config_destroy(const webrtc_processing_config* config) {
+    delete config;
+}
+
+webrtc_stream_config* webrtc_apm_processing_config_input_stream(webrtc_processing_config* config) {
+    if (!config) return nullptr;
+    auto* stream_config = new webrtc_stream_config();
+    stream_config->config = config->config.input_stream();
+    return stream_config;
+}
+
+webrtc_stream_config* webrtc_apm_processing_config_output_stream(webrtc_processing_config* config) {
+    if (!config) return nullptr;
+    auto* stream_config = new webrtc_stream_config();
+    stream_config->config = config->config.output_stream();
+    return stream_config;
+}
+
+webrtc_stream_config* webrtc_apm_processing_config_reverse_input_stream(webrtc_processing_config* config) {
+    if (!config) return nullptr;
+    auto* stream_config = new webrtc_stream_config();
+    stream_config->config = config->config.reverse_input_stream();
+    return stream_config;
+}
+
+webrtc_stream_config* webrtc_apm_processing_config_reverse_output_stream(webrtc_processing_config* config) {
+    if (!config) return nullptr;
+    auto* stream_config = new webrtc_stream_config();
+    stream_config->config = config->config.reverse_output_stream();
+    return stream_config;
+}
+
+// Initialization
+webrtc_apm_error webrtc_apm_initialize(const webrtc_apm* apm) {
+    if (!apm) {
+        return WEBRTC_APM_BAD_PARAMETER;
+    }
+    return static_cast<webrtc_apm_error>(apm->apm->Initialize());
+}
+
+webrtc_apm_error webrtc_apm_initialize_with_config(const webrtc_apm* apm, const webrtc_processing_config* config) {
+    if (!apm || !config) {
+        return WEBRTC_APM_BAD_PARAMETER;
+    }
+    return static_cast<webrtc_apm_error>(apm->apm->Initialize(config->config));
+}
+
+// Audio processing
+webrtc_apm_error webrtc_apm_process_stream(const webrtc_apm* apm, const float* const* src,
+                                                  const webrtc_stream_config* input_config,
+                                                  const webrtc_stream_config* output_config,
+                                                  float* const* dest) {
+    if (!apm || !input_config || !output_config) {
+        return WEBRTC_APM_BAD_PARAMETER;
+    }
+    return static_cast<webrtc_apm_error>(
+        apm->apm->ProcessStream(src, input_config->config, output_config->config, dest));
+}
+
+webrtc_apm_error webrtc_apm_process_reverse_stream(const webrtc_apm* apm, const float* const* src,
+                                                          const webrtc_stream_config* input_config,
+                                                          const webrtc_stream_config* output_config,
+                                                          float* const* dest) {
+    if (!apm || !input_config || !output_config) {
+        return WEBRTC_APM_BAD_PARAMETER;
+    }
+    return static_cast<webrtc_apm_error>(
+        apm->apm->ProcessReverseStream(src, input_config->config, output_config->config, dest));
+}
+
+webrtc_apm_error webrtc_apm_analyze_reverse_stream(const webrtc_apm* apm, const float* const* data,
+                                                          const webrtc_stream_config* reverse_config) {
+    if (!apm || !reverse_config) {
+        return WEBRTC_APM_BAD_PARAMETER;
+    }
+    return static_cast<webrtc_apm_error>(
+        apm->apm->AnalyzeReverseStream(data, reverse_config->config));
+}
+
+// Runtime controls
+void webrtc_apm_set_stream_analog_level(const webrtc_apm* apm, int level) {
+    if (apm) {
+        apm->apm->set_stream_analog_level(level);
+    }
+}
+
+int webrtc_apm_recommended_stream_analog_level(const webrtc_apm* apm) {
+    return apm ? apm->apm->recommended_stream_analog_level() : 0;
+}
+
+void webrtc_apm_set_stream_delay_ms(const webrtc_apm* apm, int delay) {
+    if (apm) {
+        apm->apm->set_stream_delay_ms(delay);
+    }
+}
+
+int webrtc_apm_stream_delay_ms(const webrtc_apm* apm) {
+    return apm ? apm->apm->stream_delay_ms() : 0;
+}
+
+void webrtc_apm_set_stream_key_pressed(const webrtc_apm* apm, int key_pressed) {
+    if (apm) {
+        apm->apm->set_stream_key_pressed(key_pressed != 0);
+    }
+}
+
+void webrtc_apm_set_output_will_be_muted(const webrtc_apm* apm, int muted) {
+    if (apm) {
+        apm->apm->set_output_will_be_muted(muted != 0);
+    }
+}
+
+// Runtime settings
+void webrtc_apm_set_runtime_setting_float(const webrtc_apm* apm, webrtc_apm_runtime_setting_type type, float value) {
+    if (!apm) return;
+
+    switch (type) {
+        case WEBRTC_APM_RUNTIME_CAPTURE_PRE_GAIN:
+            apm->apm->SetRuntimeSetting(webrtc::AudioProcessing::RuntimeSetting::CreateCapturePreGain(value));
+            break;
+        case WEBRTC_APM_RUNTIME_CAPTURE_POST_GAIN:
+            apm->apm->SetRuntimeSetting(webrtc::AudioProcessing::RuntimeSetting::CreateCapturePostGain(value));
+            break;
+        case WEBRTC_APM_RUNTIME_CAPTURE_FIXED_POST_GAIN:
+            apm->apm->SetRuntimeSetting(webrtc::AudioProcessing::RuntimeSetting::CreateCaptureFixedPostGain(value));
+            break;
+        case WEBRTC_APM_RUNTIME_CUSTOM_RENDER_SETTING:
+            apm->apm->SetRuntimeSetting(webrtc::AudioProcessing::RuntimeSetting::CreateCustomRenderSetting(value));
+            break;
+        default:
+            break;
+    }
+}
+
+void webrtc_apm_set_runtime_setting_int(const webrtc_apm* apm, webrtc_apm_runtime_setting_type type, int value) {
+    if (!apm) return;
+
+    switch (type) {
+        case WEBRTC_APM_RUNTIME_CAPTURE_COMPRESSION_GAIN:
+            apm->apm->SetRuntimeSetting(webrtc::AudioProcessing::RuntimeSetting::CreateCompressionGainDb(value));
+            break;
+        case WEBRTC_APM_RUNTIME_PLAYOUT_VOLUME_CHANGE:
+            apm->apm->SetRuntimeSetting(webrtc::AudioProcessing::RuntimeSetting::CreatePlayoutVolumeChange(value));
+            break;
+        default:
+            break;
+    }
+}
+
+// Statistics and info
+int webrtc_apm_proc_sample_rate_hz(const webrtc_apm* apm) {
+    return apm ? apm->apm->proc_sample_rate_hz() : 0;
+}
+
+int webrtc_apm_proc_split_sample_rate_hz(const webrtc_apm* apm) {
+    return apm ? apm->apm->proc_split_sample_rate_hz() : 0;
+}
+
+size_t webrtc_apm_num_input_channels(const webrtc_apm* apm) {
+    return apm ? apm->apm->num_input_channels() : 0;
+}
+
+size_t webrtc_apm_num_proc_channels(const webrtc_apm* apm) {
+    return apm ? apm->apm->num_proc_channels() : 0;
+}
+
+size_t webrtc_apm_num_output_channels(const webrtc_apm* apm) {
+    return apm ? apm->apm->num_output_channels() : 0;
+}
+
+size_t webrtc_apm_num_reverse_channels(const webrtc_apm* apm) {
+    return apm ? apm->apm->num_reverse_channels() : 0;
+}
+
+// AEC dump
+int webrtc_apm_create_aec_dump(const webrtc_apm* apm, const char* file_name, int64_t max_log_size_bytes) {
+    if (!apm || !file_name) {
+        return 0;
+    }
+    // The C API does not support passing a task queue, so we pass nullptr.
+    // The underlying implementation needs to handle this gracefully.
+    return apm->apm->CreateAndAttachAecDump(file_name, max_log_size_bytes, nullptr) ? 1 : 0;
+}
+
+void webrtc_apm_detach_aec_dump(const webrtc_apm* apm) {
+    if (apm) {
+        apm->apm->DetachAecDump();
+    }
+}
+
+// Frame size calculation
+size_t webrtc_apm_get_frame_size(int sample_rate_hz) {
+    return webrtc::AudioProcessing::GetFrameSize(sample_rate_hz);
+}
